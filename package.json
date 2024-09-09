@@ -1,0 +1,30 @@
+{
+  "name": "owofarm",
+  "version": "1.0.0",
+  "description": "self bot farming animals on bot owo and battle",
+  "main": "index.js",
+  "scripts": {
+    "start:dev": "npx nodemon -e ts,tsx --exec \"ts-node --project ./tsconfig.json src/main.ts\"",
+    "start": "node  dist/main.js",
+    "build": "tsc",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write ."
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "discord.js-selfbot-v13": "^3.3.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.4",
+    "eslint": "^9.10.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "prettier": "^3.3.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}
