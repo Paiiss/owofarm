@@ -7,11 +7,11 @@ class Logger {
     }
 
     info(message: string) {
-        console.log(chalk.yellowBright(`${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}`) + ' ' + chalk.magenta(`[${this.id}]`) + ': ' + chalk.green(message));
+        console.log(chalk.yellowBright(`${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}`) + ' ' + chalk.magentaBright(`[${this.id || '-'}]`) + ': ' + chalk.greenBright(message));
     }
 
     danger(message: string) {
-        console.log(chalk.yellowBright(`${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}`) + ' ' + chalk.magenta(`[${this.id}]`) + ': ' + chalk.red(message));
+        console.log(chalk.yellowBright(`${new Date().getHours()}:${new Date().getMinutes()}:${new Date().getSeconds()}`) + ' ' + chalk.magentaBright(`[${this.id || '-'}]`) + ': ' + chalk.red(message));
     }
 
     setID(id: string) {
