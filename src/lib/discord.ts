@@ -77,6 +77,7 @@ class AutoFarm {
   handleOwoCaptcha() {
     this.botStatus = false
     this.logger.info('OwO captcha detected')
+    this.stopAutoFarm()
   }
 
   handleOwoSuccessVerification(message: string): void {
@@ -138,11 +139,11 @@ class AutoFarm {
   }
 
   async sendMessage(channel: string, message: string): Promise<void> {
+    if (!this.botStatus) return this.logger.danger('Bot is not ready')
     const channelToSend = this.client.channels.cache.get(channel) as TextChannel
     if (!channelToSend) this.logger.danger('Channel not found')
     if (this.setting.typing) await channelToSend.sendTyping()
     channelToSend?.send(message).catch((err) => {
-      this.botStatus = false
       this.logger.danger(`An error occurred while sending a message: ${err}`);
     })
   }
@@ -166,7 +167,6 @@ class AutoFarm {
 
   private async autoHunt(): Promise<void> {
     this.timeoutId.hunt = setTimeout(async () => {
-      if (!this.botStatus) return this.logger.danger('Bot is not ready')
       this.logger.info('Hunting')
       await this.sendMessage(this.setting.channels.hunt, this.randomPrefix(['hunt', 'h']))
       this.autoHunt()
@@ -175,7 +175,6 @@ class AutoFarm {
 
   private async autoBattle(): Promise<void> {
     this.timeoutId.battle = setTimeout(async () => {
-      if (!this.botStatus) return this.logger.danger('Bot is not ready')
       this.logger.info('Battling')
       await this.sendMessage(this.setting.channels.hunt, this.randomPrefix(['battle', 'b']))
       this.autoBattle()
@@ -183,12 +182,10 @@ class AutoFarm {
   }
 
   private async autoPray(): Promise<void> {
-    if (!this.botStatus) return this.logger.danger('Bot is not ready')
     this.logger.info('Praying')
     await this.sendMessage(this.setting.channels.quest, this.randomPrefix(['pray']))
 
     this.timeoutId.pray = setTimeout(async () => {
-      if (!this.botStatus) return this.logger.danger('Bot is not ready')
       this.logger.info('Praying')
       await this.sendMessage(this.setting.channels.quest, this.randomPrefix(['pray']))
       this.autoPray()
@@ -196,19 +193,15 @@ class AutoFarm {
   }
 
   private async autoCurse(): Promise<void> {
-    if (!this.botStatus) return this.logger.danger('Bot is not ready')
     this.logger.info('Cursing')
     await this.sendMessage(this.setting.channels.quest, this.randomPrefix(['curse']))
 
     this.timeoutId.curse = setTimeout(async () => {
-      if (!this.botStatus) return this.logger.danger('Bot is not ready')
       this.logger.info('Cursing')
       await this.sendMessage(this.setting.channels.quest, this.randomPrefix(['curse']))
       this.autoCurse()
     }, this.setting.interval.curse)
   }
-
-
 
   stopAutoFarm(): void {
     for (const id in this.timeoutId) {
