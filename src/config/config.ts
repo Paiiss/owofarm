@@ -5,8 +5,8 @@ const config = {
     "hunt": true,
     "battle": true,
     "pray": true,
-    "curse": true,
-    "gamble": true
+    "curse": false,
+    "gamble": false
   },
   "interval": {
     "animals": 1200000,
@@ -27,11 +27,11 @@ const config = {
   },
   "channels": {
     "hunt": "1287350084832333855",
-    "battle": "1287350084832333855",
     "quest": "1287350170517770334",
     "gamble": "1287350196258209812"
   },
-  "owoId": "408785106942164992"
+  "owoId": "408785106942164992",
+  "checklist_completed": false
 }
 
 export default config;
