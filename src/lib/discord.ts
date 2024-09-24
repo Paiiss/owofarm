@@ -131,6 +131,7 @@ class AutoFarm {
   }
 
   private handleHuntGems(message: string): void {
+    this.total.hunt += 1
     const gems = []
 
     if (!message.includes('gem1')) gems.push('gem1')
