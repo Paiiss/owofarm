@@ -1,4 +1,4 @@
-import { Client, Message, TextChannel } from 'discord.js-selfbot-v13'
+import { Client, Message, TextChannel, Options } from 'discord.js-selfbot-v13'
 import Logger from '../tools/logger';
 import config from '../config/config';
 
@@ -27,10 +27,22 @@ class AutoFarm {
     lootbox: false,
     crate: false,
   }
+  private total = {
+    hunt_exp: 0,
+    hunt: 0,
+  }
 
   constructor(token: string, setting: typeof config = config) {
     this.token = token;
-    this.client = new Client();
+    this.client = new Client({
+      sweepers: {
+        ...Options.defaultSweeperSettings,
+        /* messages: {
+          interval: 10,
+          lifetime: 15
+        } */
+      }
+    });
     this.logger = new Logger();
     this.setting = setting;
     if (!setting.channels.hunt) this.logger.danger('Channel ID not found');
@@ -53,7 +65,6 @@ class AutoFarm {
     this.client.login(this.token).then(() => {
       this.logger.info('Logged in');
       this.sendCheckList()
-      this.startAutoFarm();
     }).catch((err) => {
       if (err.code === 'TOKEN_INVALID') {
         this.logger.danger('Invalid token');
@@ -71,6 +82,9 @@ class AutoFarm {
 
       // CheckList Handler
       if (message.channelId === this.setting.channels.hunt && message.author.id === this.setting.owoId && message.embeds[0]?.description && message.embeds[0]?.author?.name?.match(new RegExp(`${message.guild?.members.me?.nickname}'s Checklist`, 'g'))) this.handleCheckList(message.embeds[0].description)
+
+      // Check Hunt Gems 
+      if (message.channelId === this.setting.channels.hunt && message.author.id === this.setting.owoId && message.content?.match(new RegExp(`${message.guild?.members.me?.nickname}\\*\\*, hunt`, 'g'))) this.handleHuntGems(message.content)
     })
   }
 
@@ -94,35 +108,11 @@ class AutoFarm {
     } else {
       this.checkList.daily = true
     }
-    if (message.match(/⬛ 📝/g)) {
-      this.checkList.vote = false
-    } else {
-      this.checkList.vote = true
-    }
-
-    if (message.match(/⬛ 🍪/g)) {
-      this.checkList.cookie = false
-    } else {
-      this.checkList.cookie = true
-    }
-
-    if (message.match(/⬛ 📜/g)) {
-      this.checkList.quest = false
-    } else {
-      this.checkList.quest = true
-    }
-
-    if (message.match(/⬛ 💎/g)) {
-      this.checkList.lootbox = false
-    } else {
-      this.checkList.lootbox = true
-    }
-
-    if (message.match(/⬛ ⚔/g)) {
-      this.checkList.crate = false
-    } else {
-      this.checkList.crate = true
-    }
+    this.checkList.vote = message.match(/⬛ 📝/g) ? false : true
+    this.checkList.cookie = message.match(/⬛ 🍪/g) ? false : true
+    this.checkList.quest = message.match(/⬛ 📜/g) ? false : true
+    this.checkList.lootbox = message.match(/⬛ 💎/g) ? false : true
+    this.checkList.crate = message.match(/⬛ ⚔/g) ? false : true
 
     let checkListMessage: string[] = []
     for (const key in this.checkList) {
@@ -132,10 +122,33 @@ class AutoFarm {
 
     this.logger.info(`Checklist: ${checkListMessage.join(' | ')}`)
 
-    if (this.checkList.daily && this.checkList.vote && this.checkList.cookie && this.checkList.quest && this.checkList.lootbox && this.checkList.crate) {
+    if (this.checkList.daily && this.checkList.cookie && this.checkList.quest && this.checkList.lootbox && this.checkList.crate) {
       this.logger.info('All checklist completed ✅')
       if (this.setting.checklist_completed) this.stopAutoFarm()
     }
+
+    // this.startAutoFarm();
+  }
+
+  private handleHuntGems(message: string): void {
+    const gems = []
+
+    if (!message.includes('gem1')) gems.push('gem1')
+    if (!message.includes('gem3')) gems.push('gem3')
+    if (!message.includes('gem4')) gems.push('gem4')
+
+    if (gems.length > 0) {
+      this.logger.info(`Missing gems: ${gems.join(', ')}`)
+    }
+
+    let match;
+    const xpRegex = /gained \*\*(\d+)xp\*\*/g;
+    while ((match = xpRegex.exec(message)) !== null) {
+      const xp = parseInt(match[1], 10);
+      this.total.hunt_exp += xp;
+    }
+
+    this.logger.info(`Total XP from hunting: ${this.total.hunt_exp}`)
   }
 
   async sendMessage(channel: string, message: string): Promise<void> {
