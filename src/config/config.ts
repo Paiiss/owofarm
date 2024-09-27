@@ -10,6 +10,7 @@ const config = {
     lootbox: false,
     lootbox_fabled: false,
     crate: false,
+    cookie: false,
   },
   interval: {
     animals: 1200000,
@@ -32,6 +33,11 @@ const config = {
     hunt: '1287350084832333855',
     quest: '1287350170517770334',
     gamble: '1287350196258209812',
+  },
+  target: {
+    pray: '',
+    curse: '',
+    cookie: '408785106942164992',
   },
   owoId: '408785106942164992',
   checklist_completed: false,
