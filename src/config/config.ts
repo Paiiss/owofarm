@@ -11,6 +11,8 @@ const config = {
     lootbox_fabled: false,
     crate: false,
     cookie: false,
+    gems: true,
+    inventory: true,
   },
   interval: {
     animals: 1200000,
@@ -28,6 +30,8 @@ const config = {
       slowestTime: 16000,
       fastestTime: 32000,
     },
+    inventory: 60000,
+    checklist: 120000,
   },
   channels: {
     hunt: '1287350084832333855',
