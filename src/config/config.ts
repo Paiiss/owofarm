@@ -30,7 +30,7 @@ const config = {
       slowestTime: 16000,
       fastestTime: 32000,
     },
-    inventory: 60000,
+    inventory: 130000,
     checklist: 120000,
   },
   channels: {
