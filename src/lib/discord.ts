@@ -33,6 +33,8 @@ class AutoFarm {
     hunt_exp: 0,
     hunt: 0,
   };
+  private queue: { channel: string; message: string }[] = [];
+  private intervalQueueId: NodeJS.Timeout | null = null;
 
   constructor(token: string, setting: typeof config = config) {
     this.token = token;
@@ -131,7 +133,7 @@ class AutoFarm {
   private handleCheckList(message: string): void {
     this.logger.info('Checking checklist 📜');
     if (message.match(/⬛ 🎁/g)) {
-      this.sendMessage(this.setting.channels.hunt, this.randomPrefix(['daily']));
+      this.addMessage(this.setting.channels.hunt, this.randomPrefix(['daily']));
       this.checkList.daily = true;
     } else {
       this.checkList.daily = true;
@@ -140,7 +142,7 @@ class AutoFarm {
     if (message.match(/⬛ 🍪/g)) {
       if (this.setting.status.cookie) {
         this.logger.info('Sending cookie 🍪');
-        this.sendMessage(
+        this.addMessage(
           this.setting.channels.hunt,
           this.randomPrefix(['cookie']) + ` <@${this.setting.target.cookie || this.setting.owoId}>`
         );
@@ -258,12 +260,12 @@ class AutoFarm {
 
   private sendCheckList(): void {
     this.logger.info('Sending checklist 📜');
-    this.sendMessage(this.setting.channels.hunt, this.randomPrefix(['cl', 'checklist']));
+    this.addMessage(this.setting.channels.hunt, this.randomPrefix(['cl', 'checklist']));
   }
 
   private async autoHunt(): Promise<void> {
     this.logger.info('Hunting');
-    await this.sendMessage(this.setting.channels.hunt, this.randomPrefix(['hunt', 'h']));
+    await this.addMessage(this.setting.channels.hunt, this.randomPrefix(['hunt', 'h']));
     this.timeoutId.hunt = setTimeout(
       () => {
         this.autoHunt();
@@ -277,7 +279,7 @@ class AutoFarm {
 
   private async autoBattle(): Promise<void> {
     this.logger.info('Battling');
-    await this.sendMessage(this.setting.channels.hunt, this.randomPrefix(['battle', 'b']));
+    await this.addMessage(this.setting.channels.hunt, this.randomPrefix(['battle', 'b']));
     this.timeoutId.battle = setTimeout(
       () => {
         this.autoBattle();
@@ -292,7 +294,7 @@ class AutoFarm {
   private async autoPray(): Promise<void> {
     this.logger.info('Praying');
     let txt = this.setting.target.pray ? ` <@${this.setting.target.pray}>` : '';
-    await this.sendMessage(this.setting.channels.hunt, this.randomPrefix(['pray']) + txt);
+    await this.addMessage(this.setting.channels.hunt, this.randomPrefix(['pray']) + txt);
 
     this.timeoutId.pray = setTimeout(async () => {
       this.autoPray();
@@ -302,7 +304,7 @@ class AutoFarm {
   private async autoCurse(): Promise<void> {
     this.logger.info('Cursing');
     let txt = this.setting.target.curse ? ` <@${this.setting.target.curse}>` : '';
-    await this.sendMessage(this.setting.channels.hunt, this.randomPrefix(['curse']) + txt);
+    await this.addMessage(this.setting.channels.hunt, this.randomPrefix(['curse']) + txt);
 
     this.timeoutId.curse = setTimeout(async () => {
       this.autoCurse();
@@ -319,7 +321,7 @@ class AutoFarm {
 
   private autoInventory(): void {
     this.logger.info('Checking inventory 🧾');
-    this.sendMessage(this.setting.channels.hunt, this.randomPrefix(['inv', 'inventory']));
+    this.addMessage(this.setting.channels.hunt, this.randomPrefix(['inv', 'inventory']));
 
     if (!this.setting.status.inventory) return;
 
@@ -330,28 +332,58 @@ class AutoFarm {
 
   private openLootbox(): void {
     this.logger.info('Opening lootbox 🎁');
-    this.sendMessage(this.setting.channels.hunt, this.randomPrefix(['lootbox', 'lb']) + ' all');
+    this.addMessage(this.setting.channels.hunt, this.randomPrefix(['lootbox', 'lb']) + ' all');
   }
 
   private openLootboxfabled(): void {
     this.logger.info('Opening lootbox fabled 🎁');
-    this.sendMessage(this.setting.channels.hunt, this.randomPrefix(['lootbox', 'lb']) + ' fabled all');
+    this.addMessage(this.setting.channels.hunt, this.randomPrefix(['lootbox', 'lb']) + ' fabled all');
   }
 
   private openCrate(): void {
     this.logger.info('Opening crate 📦');
-    this.sendMessage(this.setting.channels.hunt, this.randomPrefix(['crate']) + ' all');
+    this.addMessage(this.setting.channels.hunt, this.randomPrefix(['crate']) + ' all');
   }
 
   private useGem(gem: string[]): void {
     this.logger.info(`Using gem: ${gem.join(', ')}`);
-    this.sendMessage(this.setting.channels.hunt, this.randomPrefix(['use']) + ` ${gem.join(' ')}`);
+    this.addMessage(this.setting.channels.hunt, this.randomPrefix(['use']) + ` ${gem.join(' ')}`);
   }
 
+  // Stop all auto farm
   stopAutoFarm(): void {
     for (const id in this.timeoutId) {
       const key = id as keyof typeof this.timeoutId;
       if (this.timeoutId[key]) clearTimeout(this.timeoutId[key]);
+    }
+  }
+
+  // Queue management
+  public addMessage(channelId: string, message: string): void {
+    this.queue.push({ channel: channelId, message });
+
+    if (!this.intervalQueueId) {
+      this.startProcessing();
+    }
+  }
+
+  private startProcessing(): void {
+    this.intervalQueueId = setInterval(() => {
+      if (this.queue.length > 0 && this.botStatus) {
+        const queue = this.queue.shift();
+        if (queue) {
+          this.sendMessage(queue.channel, queue.message);
+        }
+      } else {
+        this.stopProcessing();
+      }
+    }, 2000);
+  }
+
+  private stopProcessing(): void {
+    if (this.intervalQueueId) {
+      clearInterval(this.intervalQueueId);
+      this.intervalQueueId = null;
     }
   }
 }
