@@ -3,6 +3,7 @@ import Logger from '../tools/logger';
 import config from '../config/config';
 import { superscriptToNumber } from '../tools/format';
 import { Items, Gems } from '../enums/items';
+import sleep from '../tools/sleep';
 
 class AutoFarm {
   private token: string = '';
@@ -80,7 +81,7 @@ class AutoFarm {
         (message.content.match(new RegExp(`${this.client.user?.id}`, 'g')) ||
           message.mentions.users.first()?.id === this.client.user?.id)
       )
-        return this.handleOwoCaptcha(), console.log(message);
+        return this.handleOwoCaptcha();
 
       // OwO Verification Handler
       if (message.channel.type === 'DM' && message.content.match(/👍|verified|Thank you! :3/g))
@@ -211,7 +212,7 @@ class AutoFarm {
   }
 
   private handleInventory(message: string): void {
-    const regex = /`(\d+|2--)`<:\w+:\d+>([⁰¹²³⁴⁵⁶⁷⁸⁹]+)/g;
+    const regex = /`(\d+|2--)`<a?:\w+:\d+>([⁰¹²³⁴⁵⁶⁷⁸⁹]+)/g;
     let match;
     const result = {} as { [key: string]: number };
 
@@ -249,10 +250,10 @@ class AutoFarm {
   async startAutoFarm(): Promise<void> {
     if (!this.botStatus) return this.logger.danger('Bot is not ready');
     this.autoInventory();
-    if (this.setting.status.hunt) await this.autoHunt();
-    if (this.setting.status.battle) await this.autoBattle();
-    if (this.setting.status.pray) await this.autoPray();
-    if (this.setting.status.curse) await this.autoCurse();
+    if (this.setting.status.hunt) this.autoHunt(), await sleep(2000);
+    if (this.setting.status.battle) this.autoBattle(), await sleep(2000);
+    if (this.setting.status.pray) this.autoPray(), await sleep(2000);
+    if (this.setting.status.curse) this.autoCurse(), await sleep(2000);
   }
 
   private sendCheckList(): void {
