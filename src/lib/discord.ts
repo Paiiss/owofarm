@@ -1,11 +1,12 @@
 import { Client, Message, TextChannel, Options } from 'discord.js-selfbot-v13';
+import notifier from 'node-notifier';
 import Logger from '../tools/logger';
 import config from '../config/config';
 import { superscriptToNumber } from '../tools/format';
 import { Items, Gems } from '../enums/items';
 import sleep from '../tools/sleep';
 import checkConfig from '../tools/autoConfig';
-import notifier from 'node-notifier';
+import getOwoUrlLogin from '../tools/loginOwo';
 
 class AutoFarm {
   private token: string = '';
@@ -141,17 +142,22 @@ class AutoFarm {
     });
   }
 
-  handleOwoCaptcha() {
+  async handleOwoCaptcha() {
     this.botStatus = false;
     this.botReady = false;
+    this.stopAutoFarm();
+
     this.logger.info('OwO captcha detected');
+    const getOwoUrl = (await getOwoUrlLogin(this.token)) || 'https://owobot.com/captcha';
     notifier.notify({
       title: 'OwO Captcha Detected',
       message: `[${this.client.user?.username}] OwO Captcha Detected`,
       sound: true,
       wait: true,
+      open: getOwoUrl,
     });
-    this.stopAutoFarm();
+
+    this.logger.info(`Opening OwO Captcha URL: ${getOwoUrl}`);
   }
 
   handleOwoSuccessVerification(message: string): void {
