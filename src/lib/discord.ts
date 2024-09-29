@@ -5,6 +5,7 @@ import { superscriptToNumber } from '../tools/format';
 import { Items, Gems } from '../enums/items';
 import sleep from '../tools/sleep';
 import checkConfig from '../tools/autoConfig';
+import notifier from 'node-notifier';
 
 class AutoFarm {
   private token: string = '';
@@ -144,6 +145,12 @@ class AutoFarm {
     this.botStatus = false;
     this.botReady = false;
     this.logger.info('OwO captcha detected');
+    notifier.notify({
+      title: 'OwO Captcha Detected',
+      message: `[${this.client.user?.username}] OwO Captcha Detected`,
+      sound: true,
+      wait: true,
+    });
     this.stopAutoFarm();
   }
 
