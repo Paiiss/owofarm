@@ -13,8 +13,10 @@ const config = {
     cookie: false,
     gems: true,
     inventory: true,
+    quest: true,
   },
   interval: {
+    send_message: 2000,
     animals: 1200000,
     pray: 303000,
     curse: 303500,
@@ -32,6 +34,10 @@ const config = {
     },
     inventory: 130000,
     checklist: 120000,
+    quest: {
+      owo: 32000,
+      check: 60000,
+    },
   },
   channels: {
     hunt: '1287350084832333855',

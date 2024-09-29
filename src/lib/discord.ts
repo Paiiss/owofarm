@@ -19,6 +19,7 @@ class AutoFarm {
     curse: 0 as unknown as NodeJS.Timeout,
     inventory: 0 as unknown as NodeJS.Timeout,
     checklist: 0 as unknown as NodeJS.Timeout,
+    quest: 0 as unknown as NodeJS.Timeout,
   };
   private inventory = {} as any;
   private checkList = {
@@ -35,6 +36,7 @@ class AutoFarm {
   };
   private queue: { channel: string; message: string }[] = [];
   private intervalQueueId: NodeJS.Timeout | null = null;
+  private quest: { [key: string]: { status: boolean; progress: { current: number; total: number } } } = {};
 
   constructor(token: string, setting: typeof config = config) {
     this.token = token;
@@ -66,6 +68,13 @@ class AutoFarm {
       .then(() => {
         this.logger.info('Logged in');
         this.autoChecklist();
+
+        setTimeout(() => {
+          if (!this.botReady) {
+            this.botReady = true;
+            this.startAutoFarm();
+          }
+        }, 8000);
       })
       .catch((err) => {
         if (err.code === 'TOKEN_INVALID') {
@@ -102,7 +111,10 @@ class AutoFarm {
       // Check Hunt Gems
       if (
         message.content?.match(
-          new RegExp(`${message.guild?.members.me?.nickname || this.client.user?.displayName}\\*\\*, hunt`, 'g')
+          new RegExp(
+            `${message.guild?.members.me?.nickname || this.client.user?.displayName}\\*\\*( spent|, hunt)`,
+            'g'
+          )
         )
       )
         this.handleHuntGems(message.content);
@@ -114,6 +126,15 @@ class AutoFarm {
         )
       )
         this.handleInventory(message.content);
+
+      if (
+        this.setting.status.quest &&
+        message.embeds[0]?.description &&
+        message.embeds[0]?.author?.name?.match(
+          new RegExp(`${message.guild?.members.me?.nickname || this.client.user?.displayName}'s Quest Log`, 'g')
+        )
+      )
+        this.handleQuest(message.embeds[0].description);
     });
   }
 
@@ -231,6 +252,56 @@ class AutoFarm {
     if (Items.LootboxFabled in this.inventory && this.setting.status.lootbox_fabled) this.openLootboxfabled;
   }
 
+  private handleQuest(message: string): void {
+    const regex = new RegExp(/\*\*\d+\. (.+?)\*\*.*?Progress: \[(\d+)\/(\d+)\]/, 'gs');
+    let match;
+    const quests = [];
+
+    while ((match = regex.exec(message)) !== null) {
+      const questDescription = match[1];
+      const progressCurrent = match[2];
+      const progressTotal = match[3];
+
+      quests.push({
+        description: questDescription,
+        progress: {
+          current: parseInt(progressCurrent, 10),
+          total: parseInt(progressTotal, 10),
+        },
+      });
+    }
+
+    for (const quest of quests) {
+      if (quest.description.match("Say 'owo'")) {
+        if (!this.quest['owo']) {
+          this.quest['owo'] = {
+            status: false,
+            progress: {
+              current: quest.progress.current,
+              total: quest.progress.total,
+            },
+          };
+        }
+
+        if (!this.quest['owo'].status) {
+          this.quest['owo'].status = true;
+          const intervalId = setInterval(() => {
+            if (!this.botStatus) return clearInterval(intervalId);
+
+            this.logger.info('Owo quest: owo');
+            this.addMessage(this.setting.channels.hunt, 'owo');
+            this.quest['owo'].progress.current += 1;
+
+            if (this.quest['owo'].progress.current === this.quest['owo'].progress.total) {
+              delete this.quest['owo'];
+              clearInterval(intervalId);
+            }
+          }, this.setting.interval.quest.owo);
+        }
+      }
+    }
+  }
+
   async sendMessage(channel: string, message: string): Promise<void> {
     if (!this.botStatus) return this.logger.danger('Bot is not ready');
     const channelToSend = this.client.channels.cache.get(channel) as TextChannel;
@@ -252,6 +323,7 @@ class AutoFarm {
   async startAutoFarm(): Promise<void> {
     if (!this.botStatus) return this.logger.danger('Bot is not ready');
     this.autoInventory();
+    this.autoQuest();
     if (this.setting.status.hunt) this.autoHunt();
     if (this.setting.status.battle) this.autoBattle();
     if (this.setting.status.pray) this.autoPray();
@@ -265,7 +337,7 @@ class AutoFarm {
 
   private async autoHunt(): Promise<void> {
     this.logger.info('Hunting');
-    await this.addMessage(this.setting.channels.hunt, this.randomPrefix(['hunt', 'h']));
+    this.addMessage(this.setting.channels.hunt, this.randomPrefix(['hunt', 'h']));
     this.timeoutId.hunt = setTimeout(
       () => {
         this.autoHunt();
@@ -279,7 +351,7 @@ class AutoFarm {
 
   private async autoBattle(): Promise<void> {
     this.logger.info('Battling');
-    await this.addMessage(this.setting.channels.hunt, this.randomPrefix(['battle', 'b']));
+    this.addMessage(this.setting.channels.hunt, this.randomPrefix(['battle', 'b']));
     this.timeoutId.battle = setTimeout(
       () => {
         this.autoBattle();
@@ -294,7 +366,7 @@ class AutoFarm {
   private async autoPray(): Promise<void> {
     this.logger.info('Praying');
     let txt = this.setting.target.pray ? ` <@${this.setting.target.pray}>` : '';
-    await this.addMessage(this.setting.channels.hunt, this.randomPrefix(['pray']) + txt);
+    this.addMessage(this.setting.channels.hunt, this.randomPrefix(['pray']) + txt);
 
     this.timeoutId.pray = setTimeout(async () => {
       this.autoPray();
@@ -304,7 +376,7 @@ class AutoFarm {
   private async autoCurse(): Promise<void> {
     this.logger.info('Cursing');
     let txt = this.setting.target.curse ? ` <@${this.setting.target.curse}>` : '';
-    await this.addMessage(this.setting.channels.hunt, this.randomPrefix(['curse']) + txt);
+    this.addMessage(this.setting.channels.hunt, this.randomPrefix(['curse']) + txt);
 
     this.timeoutId.curse = setTimeout(async () => {
       this.autoCurse();
@@ -312,7 +384,7 @@ class AutoFarm {
   }
 
   private async autoChecklist(): Promise<void> {
-    await this.sendCheckList();
+    this.sendCheckList();
 
     this.timeoutId.checklist = setTimeout(async () => {
       this.autoChecklist();
@@ -328,6 +400,17 @@ class AutoFarm {
     this.timeoutId.inventory = setTimeout(async () => {
       this.autoInventory();
     }, this.setting.interval.inventory);
+  }
+
+  private autoQuest(): void {
+    this.logger.info('Checking quest 📜');
+    this.addMessage(this.setting.channels.quest, this.randomPrefix(['quest', 'q']));
+
+    if (!this.setting.status.quest) return;
+
+    this.timeoutId.quest = setTimeout(async () => {
+      this.autoQuest();
+    }, this.setting.interval.quest.check);
   }
 
   private openLootbox(): void {
@@ -377,7 +460,7 @@ class AutoFarm {
       } else {
         this.stopProcessing();
       }
-    }, 2000);
+    }, this.setting.interval.send_message);
   }
 
   private stopProcessing(): void {
