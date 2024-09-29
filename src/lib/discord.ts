@@ -252,10 +252,10 @@ class AutoFarm {
   async startAutoFarm(): Promise<void> {
     if (!this.botStatus) return this.logger.danger('Bot is not ready');
     this.autoInventory();
-    if (this.setting.status.hunt) this.autoHunt(), await sleep(2000);
-    if (this.setting.status.battle) this.autoBattle(), await sleep(2000);
-    if (this.setting.status.pray) this.autoPray(), await sleep(2000);
-    if (this.setting.status.curse) this.autoCurse(), await sleep(2000);
+    if (this.setting.status.hunt) this.autoHunt();
+    if (this.setting.status.battle) this.autoBattle();
+    if (this.setting.status.pray) this.autoPray();
+    if (this.setting.status.curse) this.autoCurse();
   }
 
   private sendCheckList(): void {
