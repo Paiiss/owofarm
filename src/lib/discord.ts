@@ -4,12 +4,13 @@ import config from '../config/config';
 import { superscriptToNumber } from '../tools/format';
 import { Items, Gems } from '../enums/items';
 import sleep from '../tools/sleep';
+import checkConfig from '../tools/autoConfig';
 
 class AutoFarm {
   private token: string = '';
   private logger: Logger;
   private client: Client;
-  private setting: typeof config;
+  private setting: typeof config = config;
   private botStatus: boolean = true;
   private botReady: boolean = false;
   private timeoutId = {
@@ -38,7 +39,7 @@ class AutoFarm {
   private intervalQueueId: NodeJS.Timeout | null = null;
   private quest: { [key: string]: { status: boolean; progress: { current: number; total: number } } } = {};
 
-  constructor(token: string, setting: typeof config = config) {
+  constructor(token: string) {
     this.token = token;
     this.client = new Client({
       sweepers: {
@@ -50,8 +51,7 @@ class AutoFarm {
       },
     });
     this.logger = new Logger();
-    this.setting = setting;
-    if (!setting.channels.hunt) this.logger.danger('Channel ID not found');
+    this.start();
   }
 
   start(): void {
@@ -59,22 +59,24 @@ class AutoFarm {
 
     this.client.on('ready', async () => {
       this.logger.setID(this.client.user?.username as string);
+      this.setting = checkConfig((this.client.user?.username as string) || 'default');
       this.logger.info('AutoFarm is ready!');
+
       this.sendMessage(this.setting.channels.hunt, 'AutoFarm is ready!');
+      this.autoChecklist();
+
+      setTimeout(() => {
+        if (!this.botReady) {
+          this.botReady = true;
+          this.startAutoFarm();
+        }
+      }, 8000);
     });
 
     this.client
       .login(this.token)
       .then(() => {
         this.logger.info('Logged in');
-        this.autoChecklist();
-
-        setTimeout(() => {
-          if (!this.botReady) {
-            this.botReady = true;
-            this.startAutoFarm();
-          }
-        }, 8000);
       })
       .catch((err) => {
         if (err.code === 'TOKEN_INVALID') {
