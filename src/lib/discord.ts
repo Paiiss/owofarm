@@ -90,59 +90,53 @@ class AutoFarm {
 
     this.client.on('messageCreate', async (message) => {
       if (message.author.id !== this.setting.owoId) return;
+
+      const nicknameOrDisplayName = message.guild?.members.me?.nickname || this.client.user?.displayName;
+      const isMentioned =
+        message.mentions.users.has(this.client.user?.id || '') || message.content.includes(this.client.user?.id || '');
+      const isMessageEmbed = message.embeds.length > 0;
+      const isMessageEmbedDescription = message.embeds[0]?.description;
+      const isMessageEmbedAuthor = message.embeds[0]?.author?.name;
+
       // OwO Captcha Handler
-      if (
-        message.content.match(/human|captcha|dm|banned|https:\/\/owobot.com\/captcha/g) &&
-        (message.content.match(new RegExp(`${this.client.user?.id}`, 'g')) ||
-          message.mentions.users.first()?.id === this.client.user?.id)
-      )
-        return this.handleOwoCaptcha();
+      const captchaPattern = /(human|captcha|dm|banned|https:\/\/owobot.com\/captcha)/g;
+      if (message.content.match(captchaPattern) && isMentioned) return this.handleOwoCaptcha();
 
       // OwO Verification Handler
       if (message.channel.type === 'DM' && message.content.match(/👍|verified|Thank you! :3/g))
         this.handleOwoSuccessVerification(message.content);
 
       // CheckList Handler
+      const checklistPattern = new RegExp(`${nicknameOrDisplayName}'s Checklist`, 'g');
       if (
-        message.channelId === this.setting.channels.hunt &&
-        message.embeds[0]?.description &&
-        message.embeds[0]?.author?.name?.match(
-          new RegExp(`${message.guild?.members.me?.nickname || this.client.user?.displayName}'s Checklist`, 'g')
-        )
+        isMessageEmbed &&
+        isMessageEmbedDescription &&
+        isMessageEmbedAuthor &&
+        message.embeds[0]?.author?.name?.match(checklistPattern)
       )
-        this.handleCheckList(message.embeds[0].description);
+        this.handleCheckList(message.embeds[0].description as string);
 
       // Check Hunt Gems
-      if (
-        message.content?.match(
-          new RegExp(
-            `${message.guild?.members.me?.nickname || this.client.user?.displayName}\\*\\*( spent|, hunt)`,
-            'g'
-          )
-        )
-      )
-        this.handleHuntGems(message.content);
+      const huntGemsPattern = new RegExp(`${nicknameOrDisplayName}\\*\\*( spent|, hunt)`, 'g');
+      if (message.content?.match(huntGemsPattern)) this.handleHuntGems(message.content);
 
       // Inventory Handler
-      if (
-        message.content?.match(
-          new RegExp(`${message.guild?.members.me?.nickname || this.client.user?.displayName}'s Inventory`, 'g')
-        )
-      )
-        this.handleInventory(message.content);
+      const inventoryPattern = new RegExp(`${nicknameOrDisplayName}'s Inventory`, 'g');
+      if (message.content?.match(inventoryPattern)) this.handleInventory(message.content);
 
+      // Quest Handler
+      const questLogPattern = new RegExp(`${nicknameOrDisplayName}'s Quest Log`, 'g');
       if (
         this.setting.status.quest &&
-        message.embeds[0]?.description &&
-        message.embeds[0]?.author?.name?.match(
-          new RegExp(`${message.guild?.members.me?.nickname || this.client.user?.displayName}'s Quest Log`, 'g')
-        )
+        isMessageEmbedDescription &&
+        message.embeds[0]?.author?.name?.match(questLogPattern)
       )
-        this.handleQuest(message.embeds[0].description);
+        this.handleQuest(message.embeds[0].description as string);
     });
   }
 
   async handleOwoCaptcha() {
+    if (!this.botReady && !this.botStatus) return;
     this.botStatus = false;
     this.botReady = false;
     this.stopAutoFarm();
