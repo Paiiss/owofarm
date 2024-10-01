@@ -223,7 +223,9 @@ class AutoFarm {
       if (this.setting.status.gems) {
         let userGems = [];
         for (const gem of gems) {
-          let getGem = Object.keys(this.inventory).find((item: any) => Gems[gem].includes(item));
+          let getGem = Object.keys(this.inventory)
+            .sort((a, b) => parseInt(b) - parseInt(a))
+            .find((item: any) => Gems[gem].includes(item));
           if (getGem) {
             userGems.push(getGem);
           }
@@ -439,6 +441,10 @@ class AutoFarm {
 
   private useGem(gem: string[]): void {
     this.logger.info(`Using gem: ${gem.join(', ')}`);
+    for (const g of gem) {
+      this.inventory[g] -= 1;
+      if (this.inventory[g] === 0) delete this.inventory[g];
+    }
     this.addMessage(this.setting.channels.hunt, this.randomPrefix(['use']) + ` ${gem.join(' ')}`);
   }
 
