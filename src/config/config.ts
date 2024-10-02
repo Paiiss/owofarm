@@ -4,6 +4,7 @@ const config = {
   status: {
     hunt: true,
     battle: true,
+    zoo: true,
     pray: true,
     curse: false,
     gamble: false,
@@ -18,6 +19,7 @@ const config = {
   interval: {
     send_message: 2000,
     animals: 1200000,
+    zoo: 300000,
     pray: 303000,
     curse: 303500,
     gamble: {

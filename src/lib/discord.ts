@@ -18,6 +18,7 @@ class AutoFarm {
   private timeoutId = {
     hunt: 0 as unknown as NodeJS.Timeout,
     battle: 0 as unknown as NodeJS.Timeout,
+    zoo: 0 as unknown as NodeJS.Timeout,
     pray: 0 as unknown as NodeJS.Timeout,
     curse: 0 as unknown as NodeJS.Timeout,
     inventory: 0 as unknown as NodeJS.Timeout,
@@ -339,6 +340,7 @@ class AutoFarm {
     if (this.setting.status.battle) this.autoBattle();
     if (this.setting.status.pray) this.autoPray();
     if (this.setting.status.curse) this.autoCurse();
+    if (this.setting.status.zoo) this.autoZoo();
   }
 
   private sendCheckList(): void {
@@ -372,6 +374,14 @@ class AutoFarm {
           this.setting.interval.battle.slowestTime
       )
     );
+  }
+
+  private async autoZoo(): Promise<void> {
+    this.logger.info('Zoo');
+    this.addMessage(this.setting.channels.hunt, this.randomPrefix(['zoo', 'z', 'Z', 'Zoo']));
+    this.timeoutId.zoo = setTimeout(async () => {
+      this.autoZoo();
+    }, this.setting.interval.zoo);
   }
 
   private async autoPray(): Promise<void> {
