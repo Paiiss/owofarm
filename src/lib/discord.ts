@@ -165,10 +165,8 @@ class AutoFarm {
     this.logger.info('Checking checklist 📜');
     if (message.match(/⬛ 🎁/g)) {
       this.addMessage(this.setting.channels.hunt, this.randomPrefix(['daily']));
-      this.checkList.daily = true;
-    } else {
-      this.checkList.daily = true;
     }
+    this.checkList.daily = true;
 
     if (message.match(/⬛ 🍪/g)) {
       if (this.setting.status.cookie) {
