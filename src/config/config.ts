@@ -20,8 +20,8 @@ const config = {
     send_message: 2000,
     animals: 1200000,
     zoo: 300000,
-    pray: 303000,
-    curse: 303500,
+    pray: 305000,
+    curse: 305000,
     gamble: {
       coinflip: 30000,
       slots: 30000,
@@ -34,8 +34,8 @@ const config = {
       slowestTime: 16000,
       fastestTime: 32000,
     },
-    inventory: 130000,
-    checklist: 120000,
+    inventory: 300000,
+    checklist: 300000,
     quest: {
       owo: 32000,
       check: 60000,

@@ -257,9 +257,9 @@ class AutoFarm {
     }
     this.inventory = result;
 
-    if (Items.Crate in this.inventory && this.setting.status.crate) this.openCrate;
-    if (Items.Lootbox in this.inventory && this.setting.status.lootbox) this.openLootbox;
-    if (Items.LootboxFabled in this.inventory && this.setting.status.lootbox_fabled) this.openLootboxfabled;
+    if (Items.Crate in this.inventory && this.setting.status.crate) this.openCrate();
+    if (Items.Lootbox in this.inventory && this.setting.status.lootbox) this.openLootbox();
+    if (Items.LootboxFabled in this.inventory && this.setting.status.lootbox_fabled) this.openLootboxfabled();
   }
 
   private handleQuest(message: string): void {
