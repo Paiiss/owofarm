@@ -62,7 +62,6 @@ class AutoFarm {
     this.client.on('ready', async () => {
       this.logger.setID(this.client.user?.username as string);
       checkAndWatchConfig((this.client.user?.username as string) || 'default', (config) => {
-        console.log(config);
         if (config) (this.setting = config), this.logger.info('Config loaded');
       });
       this.logger.info('AutoFarm is ready!');
