@@ -4,8 +4,7 @@ import Logger from '../tools/logger';
 import config from '../config/config';
 import { superscriptToNumber } from '../tools/format';
 import { Items, Gems } from '../enums/items';
-import sleep from '../tools/sleep';
-import checkConfig from '../tools/autoConfig';
+import checkAndWatchConfig from '../tools/autoConfig';
 import getOwoUrlLogin from '../tools/loginOwo';
 
 class AutoFarm {
@@ -62,7 +61,10 @@ class AutoFarm {
 
     this.client.on('ready', async () => {
       this.logger.setID(this.client.user?.username as string);
-      this.setting = checkConfig((this.client.user?.username as string) || 'default');
+      checkAndWatchConfig((this.client.user?.username as string) || 'default', (config) => {
+        console.log(config);
+        if (config) (this.setting = config), this.logger.info('Config loaded');
+      });
       this.logger.info('AutoFarm is ready!');
 
       this.sendMessage(this.setting.channels.hunt, 'AutoFarm is ready!');
@@ -361,6 +363,7 @@ class AutoFarm {
   }
 
   private async autoBattle(): Promise<void> {
+    if (!this.setting.status.battle) return;
     this.logger.info('Battling');
     this.addMessage(this.setting.channels.hunt, this.randomPrefix(['battle', 'b']));
     this.timeoutId.battle = setTimeout(
@@ -375,6 +378,7 @@ class AutoFarm {
   }
 
   private async autoZoo(): Promise<void> {
+    if (!this.setting.status.zoo) return;
     this.logger.info('Zoo');
     this.addMessage(this.setting.channels.hunt, this.randomPrefix(['zoo', 'z', 'Z', 'Zoo']));
     this.timeoutId.zoo = setTimeout(async () => {
@@ -383,6 +387,7 @@ class AutoFarm {
   }
 
   private async autoPray(): Promise<void> {
+    if (!this.setting.status.pray) return;
     this.logger.info('Praying');
     let txt = this.setting.target.pray ? ` <@${this.setting.target.pray}>` : '';
     this.addMessage(this.setting.channels.hunt, this.randomPrefix(['pray']) + txt);
@@ -393,6 +398,7 @@ class AutoFarm {
   }
 
   private async autoCurse(): Promise<void> {
+    if (!this.setting.status.curse) return;
     this.logger.info('Cursing');
     let txt = this.setting.target.curse ? ` <@${this.setting.target.curse}>` : '';
     this.addMessage(this.setting.channels.hunt, this.randomPrefix(['curse']) + txt);
@@ -411,6 +417,7 @@ class AutoFarm {
   }
 
   private autoInventory(): void {
+    if (!this.setting.status.inventory) return;
     this.logger.info('Checking inventory 🧾');
     this.addMessage(this.setting.channels.hunt, this.randomPrefix(['inv', 'inventory']));
 
@@ -422,6 +429,7 @@ class AutoFarm {
   }
 
   private autoQuest(): void {
+    if (!this.setting.status.quest) return;
     this.logger.info('Checking quest 📜');
     this.addMessage(this.setting.channels.quest, this.randomPrefix(['quest', 'q']));
 
@@ -433,21 +441,25 @@ class AutoFarm {
   }
 
   private openLootbox(): void {
+    if (!this.setting.status.lootbox) return;
     this.logger.info('Opening lootbox 🎁');
     this.addMessage(this.setting.channels.hunt, this.randomPrefix(['lootbox', 'lb']) + ' all');
   }
 
   private openLootboxfabled(): void {
+    if (!this.setting.status.lootbox_fabled) return;
     this.logger.info('Opening lootbox fabled 🎁');
     this.addMessage(this.setting.channels.hunt, this.randomPrefix(['lootbox', 'lb']) + ' fabled all');
   }
 
   private openCrate(): void {
+    if (!this.setting.status.crate) return;
     this.logger.info('Opening crate 📦');
     this.addMessage(this.setting.channels.hunt, this.randomPrefix(['crate']) + ' all');
   }
 
   private useGem(gem: string[]): void {
+    if (!this.setting.status.gems) return;
     this.logger.info(`Using gem: ${gem.join(', ')}`);
     for (const g of gem) {
       this.inventory[g] -= 1;
